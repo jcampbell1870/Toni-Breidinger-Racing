@@ -1,0 +1,57 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        run: dotnet build ToniBreidingerRacing.slnx -c Release
+
+      - name: Test
+        run: dotnet test tests/ToniBreidingerRacing.Tests -c Release --no-build
+
+      - name: Publish Windows x64
+        run: dotnet publish src/ToniBreidingerRacing -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Copy-Item README.md publish/
+          Compress-Archive -Path publish/* -DestinationPath ToniBreidingerRacing-win-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ToniBreidingerRacing-win-x64
+          path: ToniBreidingerRacing-win-x64.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4.1.3
+        with:
+          name: ToniBreidingerRacing-win-x64
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ToniBreidingerRacing-win-x64.zip
+          generate_release_notes: true
