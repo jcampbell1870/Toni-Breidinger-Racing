@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/ToniBreidingerRacing.Core/ToniBreidingerRacing.Core.csproj" />
+  <Project Path="src/ToniBreidingerRacing/ToniBreidingerRacing.csproj" />
+  <Project Path="tests/ToniBreidingerRacing.Tests/ToniBreidingerRacing.Tests.csproj" />
+</Solution>
