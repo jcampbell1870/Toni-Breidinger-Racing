@@ -12,7 +12,6 @@ public class DisplaySettingsTests
         Assert.Equal(3, display.InitialScale);
         Assert.True(display.PixelPerfect);
         Assert.Equal("NearestNeighbor", display.InterpolationMode);
-        Assert.True(display.HighDpiAware);
     }
 
     [Fact]
@@ -23,13 +22,11 @@ public class DisplaySettingsTests
             InitialScale = 4,
             PixelPerfect = false,
             InterpolationMode = "Bilinear",
-            HighDpiAware = false,
         };
 
         Assert.Equal(4, display.InitialScale);
         Assert.False(display.PixelPerfect);
         Assert.Equal("Bilinear", display.InterpolationMode);
-        Assert.False(display.HighDpiAware);
     }
 
     [Fact]
@@ -40,8 +37,7 @@ public class DisplaySettingsTests
           "Display": {
             "InitialScale": 4,
             "PixelPerfect": false,
-            "InterpolationMode": "Bilinear",
-            "HighDpiAware": false
+            "InterpolationMode": "Bilinear"
           }
         }
         """;
@@ -55,10 +51,10 @@ public class DisplaySettingsTests
 
         var settings = JsonSerializer.Deserialize<GameSettings>(json, options);
         Assert.NotNull(settings);
+        Assert.NotNull(settings.Display);
         Assert.Equal(4, settings.Display.InitialScale);
         Assert.False(settings.Display.PixelPerfect);
         Assert.Equal("Bilinear", settings.Display.InterpolationMode);
-        Assert.False(settings.Display.HighDpiAware);
     }
 
     [Theory]
@@ -79,5 +75,22 @@ public class DisplaySettingsTests
     {
         var display = new GameSettings.DisplayOptions { InterpolationMode = mode };
         Assert.Equal(mode, display.InterpolationMode);
+    }
+
+    [Fact]
+    public void GameSettings_HandlesMissingDisplaySection()
+    {
+        var json = "{}";
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+        };
+
+        var settings = JsonSerializer.Deserialize<GameSettings>(json, options);
+        Assert.NotNull(settings);
+        Assert.Null(settings.Display);
     }
 }

@@ -146,10 +146,11 @@
   $('disconnect').addEventListener('click',()=>{
     intentional=true;clearTimeout(retryTimer);retryTimer=null;if(socket)socket.close(1000,'User disconnect');else{welcomed=false;clearRoom();put('network-status','Disconnected.');}controls();
   });
-  $('create-form').addEventListener('submit',e=>{e.preventDefault();send({type:'create',name:$('room-name').value.trim()||'Private grid',mode:$('mode').value,trackId:$('online-track').value});});
+  $('create-form').addEventListener('submit',e=>{e.preventDefault();send({type:'create',name:$('driver-name').value.trim()||'Driver',mode:$('mode').value,trackId:$('online-track').value});});
   $('ready').addEventListener('click',()=>{const me=room?.players.find(p=>p.id===playerId);if(me)send({type:'ready',ready:!me.ready});});
   $('leave').addEventListener('click',()=>send({type:'leave'}));
   setInterval(()=>{if(!document.hidden&&game.drivingOnline())send({type:'input',...game.input()});},1000/30);
+  setInterval(()=>{if(welcomed&&!game.drivingOnline())send({type:'input',accelerate:false,brake:false,steer:0,fire:false});},20000);
   window.addEventListener('blur',()=>{if(welcomed)send({type:'input',accelerate:false,brake:true,steer:0,fire:false});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&welcomed)send({type:'input',accelerate:false,brake:true,steer:0,fire:false});});
   controls();

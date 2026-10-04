@@ -76,6 +76,17 @@ public sealed class ServerSocketTests
     }
 
     [Fact]
+    public void CompleteTournamentAndRoomLobbyFitWithoutConcurrentWriter()
+    {
+        using var peer = new SocketPeer();
+        for (var i = 0; i < 7; i++)
+            Assert.True(peer.Enqueue(new { type = "snapshot", matchId = $"match-{i}" }, $"match-{i}"));
+        Assert.True(peer.Enqueue(new { type = "room" }, "room"));
+        Assert.True(peer.Enqueue(new { type = "lobby" }, "lobby"));
+        Assert.True(peer.Enqueue(new { type = "left" }));
+    }
+
+    [Fact]
     public async Task SingleWriterSendsNewestSnapshotWithoutBlockingProducer()
     {
         using var peer = new SocketPeer();
@@ -128,6 +139,20 @@ public sealed class ServerSocketTests
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
         var received = 0;
         await peer.RunAsync(socket, _ => received++, cts.Token);
+        Assert.Equal(0, received);
+        Assert.Equal(WebSocketState.Aborted, socket.State);
+    }
+
+    [Fact]
+    public async Task UnfinishedFragmentAssemblyHasIndependentDeadline()
+    {
+        using var peer = new SocketPeer();
+        using var socket = new Socket();
+        socket.Incoming.Enqueue(([], false, WebSocketMessageType.Text));
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var received = 0;
+        await peer.RunAsync(socket, _ => received++, cts.Token).WaitAsync(TimeSpan.FromSeconds(8));
+        Assert.False(cts.IsCancellationRequested);
         Assert.Equal(0, received);
         Assert.Equal(WebSocketState.Aborted, socket.State);
     }

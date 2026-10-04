@@ -44,6 +44,7 @@ internal sealed class GameForm : Form, IGameHost
         Text = "Toni Breidinger Racing";
         BackColor = Color.Black;
 
+        _settings.Display ??= new GameSettings.DisplayOptions();
         _displayScale = Math.Clamp(_settings.Display.InitialScale, MinScale, MaxScale);
         _displayInterpolation = ParseInterpolation(_settings.Display.InterpolationMode);
 
@@ -53,11 +54,6 @@ internal sealed class GameForm : Form, IGameHost
         KeyPreview = true;
         DoubleBuffered = true;
         SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.Opaque, true);
-
-        if (_settings.Display.HighDpiAware)
-        {
-            EnableHighDpiSupport();
-        }
 
         _timer.Tick += (_, _) => Tick();
         Deactivate += (_, _) => ClearKeys();
@@ -127,15 +123,11 @@ internal sealed class GameForm : Form, IGameHost
 
         var client = ClientSize;
 
-        float scale;
-        if (_settings.Display.PixelPerfect)
+        var display = _settings.Display ?? new GameSettings.DisplayOptions();
+        var scale = Math.Min(client.Width / (float)_bitmap.Width, client.Height / (float)_bitmap.Height);
+        if (display.PixelPerfect && scale >= 1)
         {
-            scale = Math.Min(client.Width / (float)_bitmap.Width, client.Height / (float)_bitmap.Height);
-            scale = MathF.Floor(scale * 4) / 4;
-        }
-        else
-        {
-            scale = Math.Min(client.Width / (float)_bitmap.Width, client.Height / (float)_bitmap.Height);
+            scale = MathF.Floor(scale);
         }
 
         var width = (int)(_bitmap.Width * scale);
@@ -153,7 +145,7 @@ internal sealed class GameForm : Form, IGameHost
 
         if (keyData == Keys.F10)
         {
-            ToggleInterpolation();
+            ToggleInterpolation(); // NearestNeighbor (crisp) ↔ Bilinear (smooth)
             return true;
         }
 
@@ -203,9 +195,11 @@ internal sealed class GameForm : Form, IGameHost
 
     private void ToggleInterpolation()
     {
-        _displayInterpolation = _displayInterpolation == InterpolationMode.NearestNeighbor
-            ? InterpolationMode.Bilinear
-            : InterpolationMode.NearestNeighbor;
+        var display = _settings.Display ?? new GameSettings.DisplayOptions();
+        display.PixelPerfect = !display.PixelPerfect;
+        _displayInterpolation = display.PixelPerfect
+            ? InterpolationMode.NearestNeighbor
+            : InterpolationMode.Bilinear;
         Invalidate();
     }
 
@@ -339,22 +333,9 @@ internal sealed class GameForm : Form, IGameHost
         base.Dispose(disposing);
     }
 
-    private static InterpolationMode ParseInterpolation(string mode) =>
-        mode.Equals("Bilinear", StringComparison.OrdinalIgnoreCase)
+    private static InterpolationMode ParseInterpolation(string? mode) =>
+        string.Equals(mode, "Bilinear", StringComparison.OrdinalIgnoreCase)
             ? InterpolationMode.Bilinear
             : InterpolationMode.NearestNeighbor;
 
-    private static void EnableHighDpiSupport()
-    {
-        try
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Application.EnableVisualStyles();
-            }
-        }
-        catch
-        {
-        }
-    }
 }

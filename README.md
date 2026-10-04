@@ -88,7 +88,7 @@ docker run --rm -p 8080:8080 \
 
 Put a TLS reverse proxy in front of the container and enable WebSocket upgrades on `/ws`. The origin is the **scheme and host**, not the Pages repository path. Configure additional origins explicitly for other sites. Do not expose development origin rules to the public internet. `/health` is available for health checks.
 
-Rooms are in-memory and anonymous: a restart clears matches and there is no account identity, persistent ranking, cross-instance matchmaking or reconnect recovery. Run one server instance; apply host-level connection/IP limits and monitoring before operating a large public service. A lobby display name is not proof of identity.
+Rooms are in-memory and anonymous: a restart clears matches and there is no account identity, persistent ranking, cross-instance matchmaking or reconnect recovery. Rooms are listed to everyone connected to that server; “private” refers to using your own host, not password-protected tables. Run one server instance; apply host-level connection/IP limits and monitoring before operating a large public service. A lobby display name is not proof of identity.
 
 ## Arcade1870 rewards (just for playing)
 

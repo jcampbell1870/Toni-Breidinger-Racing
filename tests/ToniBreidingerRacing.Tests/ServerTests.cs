@@ -171,17 +171,21 @@ public sealed class ServerMatchTests
     }
 
     [Fact]
-    public void ActualHumanControlCanFinishLapAuthoritatively()
+    public void ActualHumanControlCanFinishAllLibraryLapsAuthoritatively()
     {
+        var track = TrackLibrary.All[0];
         var player = new OnlinePlayer("human", "Human");
-        var match = new OnlineMatch(ShortTrack, player, new("opponent", "Opponent"), 1, 0,
+        var opponent = new OnlinePlayer("opponent", "Opponent");
+        var match = new OnlineMatch(track, player, opponent, 1, 0,
             new ServerOptions { CountdownSeconds = .01 });
-        for (var i = 0; i < 60 * 60 && !match.Finished; i++)
+        var highestLap = 1;
+        for (var i = 0; i < 60 * 180 && !match.Finished; i++)
         {
             var car = match.Snapshot("room").Cars[0];
+            highestLap = Math.Max(highestLap, car.Lap);
             var position = new Vector2(car.X, car.Y);
-            var distance = ShortTrack.Project(position).Distance;
-            var target = ShortTrack.PointAt(distance + 45);
+            var distance = track.Project(position).Distance;
+            var target = track.PointAt(distance + 45);
             var error = CarPhysics.NormalizeAngle(MathF.Atan2(target.Y - position.Y, target.X - position.X) - car.Heading);
             player.Input = new(car.Speed < 100, car.Speed > 110, Math.Clamp(error * 2.6f, -1, 1), false);
             player.LastInputAt = i / 60d;
@@ -189,6 +193,8 @@ public sealed class ServerMatchTests
         }
         Assert.True(match.Finished);
         Assert.Same(player, match.Winner);
+        Assert.True(opponent.Connected);
+        Assert.Equal(track.Laps, highestLap);
         Assert.True(match.Snapshot("room").Cars[0].Finished);
         Assert.False(match.Snapshot("room").Cars[1].Finished);
     }
@@ -265,10 +271,18 @@ public sealed class ServerHubTests
         Ready(hub, players[7].Id);
         Assert.Equal(4, players[0].Peer.Room.Bracket.Count(b => b.Round == 1));
         foreach (var index in new[] { 1, 3, 5, 7 }) hub.Disconnect(players[index].Id, 0);
-        Assert.Equal(2, players[0].Peer.Room.Bracket.Count(b => b.Round == 2));
+        var semifinals = players[0].Peer.Room.Bracket.Where(b => b.Round == 2).OrderBy(b => b.Index).ToArray();
+        Assert.Equal(2, semifinals.Length);
+        Assert.Equal(players[0].Id, semifinals[0].Player1Id);
+        Assert.Equal(players[2].Id, semifinals[0].Player2Id);
+        Assert.Equal(players[4].Id, semifinals[1].Player1Id);
+        Assert.Equal(players[6].Id, semifinals[1].Player2Id);
         hub.Disconnect(players[2].Id, 0);
         hub.Disconnect(players[6].Id, 0);
         Assert.Single(players[0].Peer.Room.Bracket, b => b.Round == 3);
+        var final = players[0].Peer.Room.Bracket.Single(b => b.Round == 3);
+        Assert.Equal(players[0].Id, final.Player1Id);
+        Assert.Equal(players[4].Id, final.Player2Id);
         // An eliminated but still-connected human receives the final too.
         Assert.Contains(players[4].Peer.Latest.Values.OfType<SnapshotDto>(), s => s.Round == 3);
         hub.Disconnect(players[4].Id, 0);

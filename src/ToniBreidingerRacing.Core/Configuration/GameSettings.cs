@@ -15,24 +15,21 @@ public sealed class GameSettings
         AllowTrailingCommas = true,
     };
 
-    /// <summary>Display scaling and quality options.</summary>
+    /// <summary>Display scaling and quality options (configurable via appsettings.json).</summary>
     public sealed class DisplayOptions
     {
-        /// <summary>Initial window scale factor: 2 to 6. Will be clamped to screen.</summary>
+        /// <summary>Initial window scale factor (2–6, clamped at runtime).</summary>
         public int InitialScale { get; set; } = 3;
 
-        /// <summary>When true, use integer pixel-perfect scaling; when false, allow fractional smooth scaling.</summary>
+        /// <summary>When true, integer pixel-perfect scaling; when false, smooth fractional scaling.</summary>
         public bool PixelPerfect { get; set; } = true;
 
-        /// <summary>Interpolation mode: "NearestNeighbor" or "Linear".</summary>
+        /// <summary>Interpolation mode for F10 toggle: "NearestNeighbor" (crisp) or "Bilinear" (smooth).</summary>
         public string InterpolationMode { get; set; } = "NearestNeighbor";
-
-        /// <summary>Enable high-DPI awareness (PerMonitorV2).</summary>
-        public bool HighDpiAware { get; set; } = true;
     }
 
     /// <summary>Display and rendering options.</summary>
-    public DisplayOptions Display { get; set; } = new();
+    public DisplayOptions? Display { get; set; }
 
     public RewardTreasuryOptions Rewards { get; set; } = new();
 

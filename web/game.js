@@ -220,7 +220,7 @@ window.TBRacing = (() => {
         }else if(state){
           const mine=this.cars.find(c=>c.id===this.playerId);
           const winner=this.cars.find(c=>c.id===state.winnerId);
-          this.onStatus(state.state==='finished'?`Server result: ${winner?.name||'Awaiting result'}${winner?' wins':''}`:state.state==='countdown'?`Server countdown · ${Math.ceil(state.countdown)}`:mine?`Online · ${Math.round(mine.speed)} km/h`:'Spectating · live server race',`Round ${state.round||1} · ${mine?`Lap ${Math.min(mine.lap+1,this.track.laps)}/${this.track.laps} · `:''}${formatTime(state.elapsed)}`);
+          this.onStatus(state.state==='finished'?`Server result: ${winner?`${winner.name} wins`:'No winner · DNF'}`:state.state==='countdown'?`Server countdown · ${Math.ceil(state.countdown)}`:mine?`Online · ${Math.round(mine.speed)} km/h`:'Spectating · live server race',`Round ${state.round||1} · ${mine?`Lap ${Math.min(mine.lap+1,this.track.laps)}/${this.track.laps} · `:''}${formatTime(state.elapsed)}`);
         }else this.onStatus(this.mode==='online'?'Waiting for server race…':'Choose a circuit and start your engines.',`${this.track.name} · ${this.track.laps} laps`);
       }
     }

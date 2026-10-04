@@ -12,7 +12,7 @@ public interface IClientPeer
 public sealed class SocketPeer : IClientPeer, IDisposable
 {
     public const int MaxControlMessages = 64;
-    public const int MaxSnapshotKeys = 10;
+    public const int MaxSnapshotKeys = 16;
     private readonly object _gate = new();
     private readonly Queue<byte[]> _control = new();
     private readonly Dictionary<string, byte[]> _snapshots = [];
