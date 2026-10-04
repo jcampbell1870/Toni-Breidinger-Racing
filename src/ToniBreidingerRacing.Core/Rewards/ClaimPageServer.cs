@@ -77,7 +77,7 @@ public sealed class ClaimPageServer : IAsyncDisposable
                 return;
             }
 
-            _ = Task.Run(() => HandleClientAsync(client, cancellationToken), cancellationToken);
+            _ = Task.Run(() => HandleClientAsync(client, cancellationToken), CancellationToken.None);
         }
     }
 

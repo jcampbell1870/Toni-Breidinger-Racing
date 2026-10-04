@@ -14,7 +14,6 @@ public enum TrackFeatureKind
     Oil,
 }
 
-/// <summary>A fixed track hazard or boost pad, placed by distance along the racing line and lateral offset.</summary>
 /// <summary>Scenery palette for a course: grass, desert sand, snow or a floodlit night race.</summary>
 public enum TrackTheme
 {
@@ -25,6 +24,7 @@ public enum TrackTheme
     Dirt,
 }
 
+/// <summary>A fixed track hazard or boost pad, placed by distance along the racing line and lateral offset.</summary>
 public sealed record TrackFeature(TrackFeatureKind Kind, float Distance, float Lateral, float Radius);
 
 /// <summary>Where a world position sits relative to the track's centerline.</summary>

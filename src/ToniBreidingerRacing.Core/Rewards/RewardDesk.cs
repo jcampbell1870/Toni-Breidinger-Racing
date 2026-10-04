@@ -59,9 +59,9 @@ public sealed class RewardDesk : IAsyncDisposable
         Proof = proof;
         TrackName = trackName;
         Transaction = null;
+        Status = RewardStatus.NotEligible;
         if (proof is null)
         {
-            Status = RewardStatus.NotEligible;
             Message = Options.Enabled ? "Race too short for A1870." : "A1870 rewards are turned off.";
             return;
         }
@@ -99,6 +99,8 @@ public sealed class RewardDesk : IAsyncDisposable
         }
 
         _pending = null;
+        _cancellation?.Dispose();
+        _cancellation = null;
         RewardClaimResult result;
         try
         {
@@ -166,10 +168,24 @@ public sealed class RewardDesk : IAsyncDisposable
 
     private void CancelPending()
     {
-        // The in-flight request may still observe the token, so it is cancelled but not disposed.
-        _cancellation?.Cancel();
+        // The in-flight request may still observe the token, so it is disposed only once that request ends.
+        var cancellation = _cancellation;
+        var pending = _pending;
         _cancellation = null;
-
         _pending = null;
+        if (cancellation is null)
+        {
+            return;
+        }
+
+        cancellation.Cancel();
+        if (pending is null)
+        {
+            cancellation.Dispose();
+        }
+        else
+        {
+            pending.ContinueWith(_ => cancellation.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
     }
 }

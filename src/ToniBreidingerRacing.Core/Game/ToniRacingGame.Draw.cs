@@ -326,13 +326,12 @@ public sealed partial class ToniRacingGame
             PickupKind.Tires => (Pal.Blue, "T"),
             _ => (Pal.Yellow, "S"),
         };
-        var border = pickup.Kind is PickupKind.Letter or PickupKind.Engine or PickupKind.Tires or PickupKind.TopSpeed && Blink(4)
-            ? Pal.Yellow
-            : Pal.White;
-        if (pickup.Kind == PickupKind.TopSpeed)
+        var border = pickup.Kind switch
         {
-            border = Blink(4) ? Pal.HotPink : Pal.White;
-        }
+            PickupKind.Missiles => Pal.White,
+            PickupKind.TopSpeed => Blink(4) ? Pal.HotPink : Pal.White,
+            _ => Blink(4) ? Pal.Yellow : Pal.White,
+        };
 
         f.FillRect(cx - 5, cy - 5 + 2, 11, 11, Pal.Black);
         f.FillRect(cx - 6, cy - 6, 11, 11, fill);

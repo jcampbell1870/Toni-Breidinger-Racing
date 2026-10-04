@@ -212,6 +212,23 @@ public class RewardTests
     }
 
     [Fact]
+    public async Task RewardDesk_NextRaceRequestsANewClaimAfterPreviousWasReady()
+    {
+        var handler = new StubHandler(HttpStatusCode.OK, JsonSerializer.Serialize(ValidPayload(), new JsonSerializerOptions(JsonSerializerDefaults.Web)));
+        await using var desk = new RewardDesk(new RewardIssuerClient(new HttpClient(handler), new RewardTreasuryOptions(), new FakeTimeProvider(Now)));
+
+        desk.Begin(PlayReward.CreateProof("t", 1, 1, 4, Now.UtcDateTime), "Race 1", Wallet);
+        await WaitFor(() => { desk.Poll(); return desk.Status == RewardStatus.Ready; });
+
+        desk.Begin(PlayReward.CreateProof("t", 2, 3, 4, Now.UtcDateTime), "Race 2", Wallet);
+        Assert.Equal(RewardStatus.Requesting, desk.Status);
+        Assert.Null(desk.Transaction);
+        await WaitFor(() => { desk.Poll(); return desk.Status == RewardStatus.Ready; });
+        Assert.Equal(2, handler.Calls);
+        Assert.Equal("Race 2", desk.TrackName);
+    }
+
+    [Fact]
     public void RewardDesk_IneligibleRaceRequestsNothing()
     {
         var handler = new StubHandler(HttpStatusCode.OK, "{}");
