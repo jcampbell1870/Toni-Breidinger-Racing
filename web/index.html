@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#161719">
+  <meta name="description" content="Toni Breidinger Racing: free offline practice and private multiplayer races.">
+  <title>Toni Breidinger Racing · Racing lounge</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./game.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./index.html"><span class="brand-mark">TB<span>25</span></span><span>TONI BREIDINGER<small>RACING LOUNGE</small></span></a>
+    <nav aria-label="Main navigation"><a href="#practice">Practice</a><a href="#multiplayer">Multiplayer</a><a href="#downloads">Downloads</a></nav>
+    <span class="local-badge">FREE TO RACE</span>
+  </header>
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow">THE GRID IS YOURS</p><h1>Precision.<br>Speed. <em>You.</em></h1><p class="intro">A racing lounge built for the next green flag. Master the line offline, or invite your friends to a private, server-refereed showdown.</p>
+        <div class="hero-actions"><a class="button primary" href="#practice">Enter practice <span>↗</span></a><a class="button secondary" href="#multiplayer">Private multiplayer</a></div>
+        <p class="quiet">No account. No wallet. No token rewards. Just racing.</p>
+      </div>
+      <div class="hero-art" aria-label="Original illustration of a red number 25 race car"><div class="speed-line one"></div><div class="speed-line two"></div><div class="illustrated-car"><span class="windshield"></span><strong>25</strong><span class="car-stripe"></span></div><span class="art-caption">CHASE THE CHECKERED FLAG</span></div>
+    </section>
+    <section class="formats" aria-label="Race formats">
+      <article><span class="format-number">01</span><div><h2>Practice grid</h2><p>You + three AI rivals · always available</p></div><span class="pill">OFFLINE</span></article>
+      <article><span class="format-number">02</span><div><h2>Head-to-head</h2><p>Two drivers · one finish line</p></div><span class="pill gold">2 SEATS</span></article>
+      <article><span class="format-number">03</span><div><h2>Knockout cup</h2><p>Eight drivers · three rounds</p></div><span class="pill gold">8 SEATS</span></article>
+    </section>
+    <section id="practice" class="panel">
+      <div class="section-heading"><div><p class="eyebrow">YOUR PERSONAL PADDOCK</p><h2>Race the line.</h2></div><span id="race-mode" class="pill">OFFLINE PRACTICE</span></div>
+      <div class="race-toolbar"><label>Practice circuit<select id="track"></select></label><label>Graphics<select id="quality"><option value="ultra">Ultra</option><option value="high" selected>High</option><option value="low">Low · battery saver</option></select></label><button id="start" class="primary">Start practice</button><button id="fullscreen">Fullscreen</button></div>
+      <div class="race-stage" id="race-stage"><canvas id="race" aria-label="Top-down race view. Use arrows or WASD to drive." tabindex="0"></canvas><div class="hud"><span id="race-status" role="status">Choose a circuit and start your engines.</span><span id="race-stats">3 laps · 4 drivers</span></div><div class="touch-controls" aria-label="Touch driving controls"><div><button data-control="left" aria-label="Steer left">◀</button><button data-control="right" aria-label="Steer right">▶</button></div><div><button data-control="brake">BRAKE</button><button data-control="gas">GAS</button></div></div></div>
+      <p class="controls"><strong>DRIVE</strong> ↑ / W gas · ↓ / S brake · ← → / A D steer · R restart practice · gamepad left stick + triggers. Gold chevrons boost; oil and water reduce grip. Touch controls appear on touch devices.</p>
+      <div id="results" class="results" aria-live="polite"></div>
+    </section>
+    <section id="multiplayer" class="panel">
+      <div class="section-heading"><div><p class="eyebrow">REAL FRIENDS. REAL RACES.</p><h2>Private multiplayer.</h2></div><span class="pill" id="connection-badge">NOT CONNECTED</span></div>
+      <p class="intro small">No server is configured by default. A separately deployed racing server is required. GitHub Pages hosts this game, not a WebSocket server. Manually enter your host's production WSS address; no demo server, public server, or simulated online players are provided.</p>
+      <p id="file-online-notice" class="network-status" hidden>You're playing an extracted offline ZIP. Practice works here, but multiplayer cannot connect from a file:// page because its opaque origin is rejected by the racing server. For online play, open the <a href="https://jcampbell1870.github.io/Toni-Breidinger-Racing/" class="hosted-link">hosted racing lounge ↗</a>, or serve these files over HTTP from an origin your server explicitly allows.</p>
+      <form id="connect-form" class="connection-form"><label>Driver name<input id="driver-name" maxlength="24" value="Driver" autocomplete="nickname" required></label><label class="grow">WebSocket server<input id="server-url" type="url" placeholder="wss://your-racing-server.example" autocomplete="off" required></label><button id="connect" class="primary">Connect</button><button id="disconnect" type="button" disabled>Disconnect</button></form>
+      <p id="network-status" role="status" class="network-status">Server address stays on this device. Your name and driving inputs are sent only to the server you choose.</p>
+      <div class="online-layout"><div><h3>Open tables</h3><div id="rooms" class="rooms"><p class="quiet">Connect to see available rooms.</p></div><form id="create-form" class="create-form"><label>Format<select id="mode"><option value="duel">Head-to-head · 2</option><option value="tournament">Knockout cup · 8</option></select></label><label>Server circuit<select id="online-track"></select></label><button id="create" class="primary" disabled>Create room</button></form></div><div><h3>Your room</h3><div id="room-detail"><p class="quiet">No room joined.</p></div><div class="room-actions"><button id="ready" class="primary" disabled>Ready to race</button><button id="leave" disabled>Leave room</button></div><div id="bracket" aria-live="polite"></div></div></div>
+    </section>
+    <section id="downloads" class="downloads"><div><p class="eyebrow">TAKE THE GRID WITH YOU</p><h2>Your machine. Your race.</h2><p>Practice without a connection. Multiplayer always needs a reachable server.</p></div><a class="download-card" href="./downloads/ToniBreidingerRacing-win-x64.zip" download><span class="download-icon">⊞</span><strong>Windows desktop<small>Windows x64 · native application ZIP</small></strong><span>↓</span></a><a class="download-card" href="./downloads/ToniBreidingerRacing-chromebook.zip" download><span class="download-icon">◎</span><strong>Chromebook / browser<small>Offline web ZIP · extract, open index.html</small></strong><span>↓</span></a></section>
+    <section class="offline-note"><h3>Offline on Chromebook</h3><p>Download and extract the browser ZIP in Files, then open <strong>index.html</strong> in Chrome. All practice assets are included; no installation, server, or executable is needed. This is a browser game, not a ChromeOS-native EXE. On the hosted site, an offline cache becomes available after the first successful visit. Browser storage policies may clear that cache; the extracted ZIP is the reliable offline option.</p></section>
+  </main>
+  <footer><span>TB / 25 <strong>TONI BREIDINGER RACING</strong></span><p>Unofficial fan game; not affiliated with or endorsed by Toni Breidinger, NASCAR, or Nintendo. Original racing-lounge artwork. No gambling, purchases, cash prizes, or blockchain rewards. Offline practice sends no gameplay data. Multiplayer is anonymous and has no authentication; room IDs are listed to connected peers. “Private” means playing on your chosen self-hosted friend server, not access-controlled rooms. Use a host you trust.</p></footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "id": "./",
+  "name": "Toni Breidinger Racing",
+  "short_name": "TB Racing",
+  "description": "Offline racing practice and private server-hosted multiplayer.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111214",
+  "theme_color": "#161719",
+  "icons": [{"src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+}

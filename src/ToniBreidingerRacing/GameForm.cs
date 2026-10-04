@@ -11,14 +11,13 @@ using ToniBreidingerRacing.Core.Rewards;
 
 namespace ToniBreidingerRacing;
 
-/// <summary>
-/// The Windows shell: runs a fixed-step game loop, maps the keyboard to NES-style buttons and
-/// scales the 256x240 frame up with crisp nearest-neighbour pixels.
-/// </summary>
 internal sealed class GameForm : Form, IGameHost
 {
     private const double StepSeconds = 1.0 / 60.0;
     private const int MaxStepsPerTick = 5;
+    private const int MinScale = 2;
+    private const int MaxScale = 6;
+    private const string BrowserMultiplayerUrl = "https://jcampbell1870.github.io/Toni-Breidinger-Racing/";
 
     private readonly GameSettings _settings;
     private readonly ToniRacingGame _game;
@@ -34,6 +33,8 @@ internal sealed class GameForm : Form, IGameHost
     private bool _fullScreen;
     private bool _shutdownComplete;
     private FormWindowState _windowedState = FormWindowState.Normal;
+    private InterpolationMode _displayInterpolation;
+    private int _displayScale;
 
     public GameForm(GameSettings settings, PlayerProfile profile, string profilePath, RewardIssuerClient rewardClient)
     {
@@ -42,7 +43,12 @@ internal sealed class GameForm : Form, IGameHost
 
         Text = "Toni Breidinger Racing";
         BackColor = Color.Black;
-        ClientSize = new Size(FrameBuffer.ScreenWidth * 3, FrameBuffer.ScreenHeight * 3);
+
+        _settings.Display ??= new GameSettings.DisplayOptions();
+        _displayScale = Math.Clamp(_settings.Display.InitialScale, MinScale, MaxScale);
+        _displayInterpolation = ParseInterpolation(_settings.Display.InterpolationMode);
+
+        ClientSize = new Size(FrameBuffer.ScreenWidth * _displayScale, FrameBuffer.ScreenHeight * _displayScale);
         MinimumSize = SizeFromClientSize(new Size(FrameBuffer.ScreenWidth, FrameBuffer.ScreenHeight));
         StartPosition = FormStartPosition.CenterScreen;
         KeyPreview = true;
@@ -111,15 +117,17 @@ internal sealed class GameForm : Form, IGameHost
 
         var g = e.Graphics;
         g.Clear(Color.Black);
-        g.InterpolationMode = InterpolationMode.NearestNeighbor;
+        g.InterpolationMode = _displayInterpolation;
         g.PixelOffsetMode = PixelOffsetMode.Half;
         g.CompositingQuality = CompositingQuality.HighSpeed;
 
         var client = ClientSize;
+
+        var display = _settings.Display ?? new GameSettings.DisplayOptions();
         var scale = Math.Min(client.Width / (float)_bitmap.Width, client.Height / (float)_bitmap.Height);
-        if (scale >= 1)
+        if (display.PixelPerfect && scale >= 1)
         {
-            scale = MathF.Floor(scale * 4) / 4;
+            scale = MathF.Floor(scale);
         }
 
         var width = (int)(_bitmap.Width * scale);
@@ -132,6 +140,18 @@ internal sealed class GameForm : Form, IGameHost
         if (keyData == Keys.F11 || keyData == (Keys.Alt | Keys.Enter))
         {
             ToggleFullScreen();
+            return true;
+        }
+
+        if (keyData == Keys.F10)
+        {
+            ToggleInterpolation(); // NearestNeighbor (crisp) ↔ Bilinear (smooth)
+            return true;
+        }
+
+        if (keyData == Keys.F9)
+        {
+            OpenUrl(new Uri(BrowserMultiplayerUrl));
             return true;
         }
 
@@ -173,6 +193,16 @@ internal sealed class GameForm : Form, IGameHost
         _previous = Buttons.None;
     }
 
+    private void ToggleInterpolation()
+    {
+        var display = _settings.Display ?? new GameSettings.DisplayOptions();
+        display.PixelPerfect = !display.PixelPerfect;
+        _displayInterpolation = display.PixelPerfect
+            ? InterpolationMode.NearestNeighbor
+            : InterpolationMode.Bilinear;
+        Invalidate();
+    }
+
     private void ToggleFullScreen()
     {
         _fullScreen = !_fullScreen;
@@ -187,7 +217,7 @@ internal sealed class GameForm : Form, IGameHost
         {
             FormBorderStyle = FormBorderStyle.Sizable;
             WindowState = _windowedState;
-            ClientSize = new Size(FrameBuffer.ScreenWidth * 3, FrameBuffer.ScreenHeight * 3);
+            ClientSize = new Size(FrameBuffer.ScreenWidth * _displayScale, FrameBuffer.ScreenHeight * _displayScale);
             CenterToScreen();
         }
 
@@ -240,7 +270,7 @@ internal sealed class GameForm : Form, IGameHost
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            MessageBox.Show(this, $"Open this page in your browser to claim your reward:\n\n{url}", Text);
+            MessageBox.Show(this, $"Open this page in your browser to access multiplayer:\n\n{url}", Text);
         }
     }
 
@@ -260,7 +290,6 @@ internal sealed class GameForm : Form, IGameHost
         }
         catch (InvalidOperationException)
         {
-            // No audio device: keep racing silently.
         }
     }
 
@@ -274,7 +303,6 @@ internal sealed class GameForm : Form, IGameHost
             return;
         }
 
-        // Finish shutting down the reward desk (claim page server, pending requests) first.
         e.Cancel = true;
         _timer.Stop();
         Hide();
@@ -284,7 +312,6 @@ internal sealed class GameForm : Form, IGameHost
         }
         catch (Exception ex)
         {
-            // Never let shutdown problems crash the game on exit.
             Debug.WriteLine($"Shutdown error: {ex.Message}");
         }
         finally
@@ -305,4 +332,10 @@ internal sealed class GameForm : Form, IGameHost
 
         base.Dispose(disposing);
     }
+
+    private static InterpolationMode ParseInterpolation(string? mode) =>
+        string.Equals(mode, "Bilinear", StringComparison.OrdinalIgnoreCase)
+            ? InterpolationMode.Bilinear
+            : InterpolationMode.NearestNeighbor;
+
 }

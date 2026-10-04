@@ -1,0 +1,54 @@
+name: Publish game and downloads to Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build ToniBreidingerRacing.slnx -c Release
+      - name: Test
+        run: dotnet test tests/ToniBreidingerRacing.Tests -c Release --no-build
+      - name: Publish self-contained Windows game
+        run: dotnet publish src/ToniBreidingerRacing -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+      - name: Package website and platform downloads
+        run: |
+          mkdir -p _site/downloads
+          cp -R web/. _site/
+          cp README.md publish/
+          (cd publish && zip -r ../_site/downloads/ToniBreidingerRacing-win-x64.zip .)
+          (cd web && zip -r ../_site/downloads/ToniBreidingerRacing-chromebook.zip .)
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3.0.1
+        with:
+          path: _site
+
+  deploy:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5.0.0
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4.0.5

@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ToniBreidingerRacing.Core\ToniBreidingerRacing.Core.csproj" />
+    <ProjectReference Include="..\..\src\ToniBreidingerRacing.Server\ToniBreidingerRacing.Server.csproj" />
   </ItemGroup>
 
 </Project>
