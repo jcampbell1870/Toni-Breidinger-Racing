@@ -282,6 +282,11 @@ internal sealed class GameForm : Form, IGameHost
         {
             await _game.DisposeAsync();
         }
+        catch (Exception ex)
+        {
+            // Never let shutdown problems crash the game on exit.
+            Debug.WriteLine($"Shutdown error: {ex.Message}");
+        }
         finally
         {
             _shutdownComplete = true;
