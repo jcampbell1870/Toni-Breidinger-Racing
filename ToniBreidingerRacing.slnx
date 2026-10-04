@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ToniBreidingerRacing.Server/ToniBreidingerRacing.Server.csproj" />
+  </Folder>
   <Project Path="src/ToniBreidingerRacing.Core/ToniBreidingerRacing.Core.csproj" />
   <Project Path="src/ToniBreidingerRacing/ToniBreidingerRacing.csproj" />
   <Project Path="tests/ToniBreidingerRacing.Tests/ToniBreidingerRacing.Tests.csproj" />

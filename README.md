@@ -1,6 +1,6 @@
 # Toni Breidinger Racing
 
-A 2D Windows PC racing game in the style of the 1980s NES classic **R.C. Pro-Am**. You play as NASCAR driver **Toni Breidinger**, the best racer on the circuit. Race top-down around eight courses against three rivals, fire missiles, hit zippers, collect upgrades and spell **T-O-N-I**. Every race you finish earns **Arcade1870 (A1870)** tokens from the same reward treasury as [Crypto Hockey](https://github.com/jcampbell1870/Crypto-Hockey).
+A top-down racing game with a Windows arcade edition and a high-resolution browser edition for Chromebooks and PCs. In the Windows game, you play as NASCAR driver **Toni Breidinger**: race eight courses against three rivals, fire missiles, hit zippers, collect upgrades and spell **T-O-N-I**. Eligible Windows races earn **Arcade1870 (A1870)** tokens from the same reward treasury as [Crypto Hockey](https://github.com/jcampbell1870/Crypto-Hockey).
 
 > Unofficial fan game. It is not affiliated with or endorsed by Toni Breidinger, NASCAR or Nintendo. The rival drivers are fictional.
 
@@ -35,6 +35,60 @@ A 2D Windows PC racing game in the style of the 1980s NES classic **R.C. Pro-Am*
 | C | Claim A1870 reward with MetaMask |
 | R | Retry a failed reward request |
 | F11 / Alt+Enter | Toggle full screen |
+| F10 | Toggle pixel-perfect / smooth display (Windows) |
+| F9 | Open the browser multiplayer lobby (Windows) |
+
+## Play online and download
+
+**GitHub Pages address:** <https://jcampbell1870.github.io/Toni-Breidinger-Racing/>
+
+The address becomes available after the changes are merged to `main`, a repository administrator selects **Settings → Pages → Source → GitHub Actions**, and **Publish game and downloads to Pages** succeeds. This repository change does not itself enable Pages or deploy a multiplayer server.
+
+The site includes two direct downloads, built from the same commit as the site:
+
+- [Windows PC ZIP](https://jcampbell1870.github.io/Toni-Breidinger-Racing/downloads/ToniBreidingerRacing-win-x64.zip): extract the complete archive and run `ToniBreidingerRacing.exe`. Windows x64; the .NET runtime is bundled. This is the original arcade season game.
+- [Chromebook ZIP](https://jcampbell1870.github.io/Toni-Breidinger-Racing/downloads/ToniBreidingerRacing-chromebook.zip): extract it and open `index.html` in Chrome for offline practice. This is the browser edition, not a Windows executable or a ChromeOS native binary. For online play, open the hosted Pages site (or serve the files from an explicitly allowed HTTP(S) origin); the server intentionally rejects opaque `file://` origins.
+
+The browser edition runs on Windows too, so **both platforms use the same browser lobby for multiplayer**. The native Windows executable does not connect to online matches.
+
+### Graphics and lobby upgrade
+
+The browser edition uses a high-DPI canvas, quality presets, smooth animation, car shadows and racing effects rather than enlarging a fixed NES framebuffer. Choose a quality level suited to your Chromebook or PC; output resolution and frame rate depend on the device and browser. The Windows edition retains its retro artwork, with pixel-perfect or smooth scaling and full-screen, per-monitor DPI support. These upgrades do not claim photorealistic 3D graphics or unlimited hardware performance.
+
+The original dark racing lobby uses red/gold accents, room listings, ready seats and tournament brackets inspired by poker-client layouts. It does not use GGPoker branding, proprietary assets, gambling or entry fees.
+
+### Live multiplayer
+
+- **1v1:** two humans join a room and ready up for a live race.
+- **Eight-person tournament:** eight humans ready up; four quarterfinals lead to two semifinals and a final. Results and advancement are decided by the server, not submitted by clients.
+- The server uses the Windows game's track library and physics, a fixed-step simulation and live WebSocket snapshots. Practice opponents are AI; online seats are never filled with fake players.
+- Disconnects forfeit active races. Input expires when a client stops sending controls; race timeouts prevent abandoned matches from blocking the tournament.
+- Browser/online races do **not** request A1870 rewards. The existing wallet/reward flow remains exclusive to the Windows season game.
+
+**GitHub Pages only hosts static files.** For live online play, deploy `src/ToniBreidingerRacing.Server` to a host that supports long-lived WebSockets and .NET 10 (or its included Docker image). Configure TLS and the allowed browser origins, then enter the server's `wss://YOUR-HOST/ws` address in the lobby's connection settings. Until that server is deployed, offline practice and downloads work but live rooms are unavailable.
+
+Local development:
+
+```sh
+dotnet run --project src/ToniBreidingerRacing.Server --urls http://localhost:5080
+python3 -m http.server 8080 --directory web
+```
+
+Open `http://localhost:8080` and connect to `ws://localhost:5080/ws`. Use separate tabs/browser profiles for two racers, or eight for a tournament.
+
+Production server example:
+
+```sh
+docker build -f src/ToniBreidingerRacing.Server/Dockerfile -t toni-racing-server .
+docker run --rm -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e AllowedOrigins__0=https://jcampbell1870.github.io \
+  toni-racing-server
+```
+
+Put a TLS reverse proxy in front of the container and enable WebSocket upgrades on `/ws`. The origin is the **scheme and host**, not the Pages repository path. Configure additional origins explicitly for other sites. Do not expose development origin rules to the public internet. `/health` is available for health checks.
+
+Rooms are in-memory and anonymous: a restart clears matches and there is no account identity, persistent ranking, cross-instance matchmaking or reconnect recovery. Run one server instance; apply host-level connection/IP limits and monitoring before operating a large public service. A lobby display name is not proof of identity.
 
 ## Arcade1870 rewards (just for playing)
 
@@ -67,7 +121,7 @@ dotnet publish src/ToniBreidingerRacing -c Release -r win-x64 --self-contained t
 
 The game logic, renderer and rewards are all in the cross-platform `ToniBreidingerRacing.Core` library, so the tests also run on Linux and macOS. Only the thin WinForms window needs Windows.
 
-Pushing a `v*` tag runs `.github/workflows/release.yml`. It builds, tests and publishes `ToniBreidingerRacing-win-x64.zip` as a GitHub release.
+Pushing a `v*` tag runs `.github/workflows/release.yml`. It builds, tests and publishes Windows and Chromebook ZIPs as a GitHub release. Pushing `main` also builds both downloads and deploys the browser site through `.github/workflows/pages.yml` once Pages is enabled.
 
 ## Project layout
 
@@ -80,5 +134,7 @@ src/ToniBreidingerRacing.Core/   Game logic (cross-platform)
   Rewards/       Arcade1870 claim client, encoder, claim page (shared treasury)
   Configuration/ appsettings + player profile
 src/ToniBreidingerRacing/        Windows (WinForms) shell
+src/ToniBreidingerRacing.Server/ Authoritative WebSocket multiplayer server
+web/                           GitHub Pages site, browser game and offline Chromebook edition
 tests/ToniBreidingerRacing.Tests xUnit tests
 ```
