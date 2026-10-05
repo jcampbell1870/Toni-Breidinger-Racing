@@ -57,6 +57,13 @@
   function node(tag,text,className){
     const el=document.createElement(tag);el.textContent=text;if(className)el.className=className;return el;
   }
+  function championshipTrophy(){
+    const trophy=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    trophy.setAttribute('viewBox','0 0 64 64');trophy.setAttribute('class','champion-trophy');trophy.setAttribute('role','img');trophy.setAttribute('aria-label','Championship trophy');
+    const cup=document.createElementNS('http://www.w3.org/2000/svg','path');
+    cup.setAttribute('d','M18 8h28v10c0 11-5.6 18.9-12 21v8h9v7H21v-7h9v-8c-6.4-2.1-12-10-12-21V8zm-7 5H5v6c0 8 5 13 14 14l-2-6c-5-1-7-4-7-8zm40 0v6c0 4-2 7-7 8l-2 6c9-1 14-6 14-14v-6z');
+    cup.setAttribute('fill','currentColor');trophy.append(cup);return trophy;
+  }
   function renderRooms(){
     $('rooms').replaceChildren();
     if(!rooms.length){$('rooms').append(node('p',welcomed?'No open rooms. Create the first grid.':'Connect to see available rooms.','quiet'));return;}
@@ -84,7 +91,11 @@
       const name=id=>room.players.find(p=>p.id===id)?.name||(id?'Driver':'To be decided');
       for(const match of room.bracket)bracket.append(node('div',`Round ${match.round} · ${name(match.player1Id)} vs ${name(match.player2Id)} · ${match.winnerId?`${name(match.winnerId)} wins`:match.status}`,'bracket-match'));
     }
-    if(room.championId)bracket.append(node('strong',`Server champion: ${room.players.find(p=>p.id===room.championId)?.name||'Driver'}`));
+    if(room.championId){
+      const champion=node('div','','tournament-champion'),copy=node('div');
+      copy.append(node('span','TOURNAMENT CHAMPION','champion-label'),node('strong',room.players.find(p=>p.id===room.championId)?.name||'Driver'));
+      champion.append(championshipTrophy(),copy);bracket.append(champion);
+    }
     controls();renderRooms();
   }
   function trackValid(t){
